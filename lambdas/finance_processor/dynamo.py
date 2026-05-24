@@ -55,7 +55,8 @@ def _update_balance(user_id: int, tipo: str, monto: float, categoria: str | None
         if categoria in CATEGORIES:
             _table.update_item(
                 Key={"PK": pk, "SK": f"BALANCE#{categoria}"},
-                UpdateExpression="ADD total :m SET updated_at = :t",
+                UpdateExpression="ADD #total :m SET updated_at = :t",
+                ExpressionAttributeNames={"#total": "total"},
                 ExpressionAttributeValues={":m": amount, ":t": _now()},
             )
     elif tipo == "ingreso":

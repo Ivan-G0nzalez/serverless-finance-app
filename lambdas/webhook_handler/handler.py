@@ -2,7 +2,7 @@ import json
 import os
 import boto3
 
-from telegram import parse_update, send_message
+from telegram import parse_update
 
 lambda_client = boto3.client("lambda")
 FINANCE_PROCESSOR_ARN = os.environ["FINANCE_PROCESSOR_ARN"]

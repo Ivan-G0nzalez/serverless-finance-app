@@ -1,6 +1,6 @@
 output "api_gateway_url" {
   description = "URL base del API Gateway — úsala para registrar el webhook en Telegram"
-  value       = "${aws_api_gateway_deployment.main.invoke_url}${aws_api_gateway_stage.main.stage_name}/webhook"
+  value       = "${aws_api_gateway_stage.main.invoke_url}/webhook"
 }
 
 output "dynamodb_table_name" {
