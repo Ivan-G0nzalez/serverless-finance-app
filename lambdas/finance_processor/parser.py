@@ -37,4 +37,6 @@ def parse_message(text: str) -> dict:
         messages=[{"role": "user", "content": text}],
     )
     raw = response.content[0].text.strip()
+    if raw.startswith("```"):
+        raw = raw.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
     return json.loads(raw)
