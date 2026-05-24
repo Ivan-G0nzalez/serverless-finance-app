@@ -2,6 +2,20 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Security Rules
+
+These rules apply to every change made in this repository, including code, configuration, and infrastructure.
+
+**Never expose credentials or sensitive information:**
+- Tokens, API keys, and AWS credentials must only live in `terraform/terraform.tfvars` or local environment variables — never in source code, comments, or documentation.
+- `terraform/terraform.tfvars` is gitignored and must never be committed. Use `.env.example` with placeholder values as the shareable reference.
+- Do not hardcode ARNs containing AWS account IDs, endpoint URLs, or any value that identifies a real deployment. Inject all of these via Terraform `environment_variables`.
+- `terraform.tfstate` and `terraform.tfstate.backup` must not be committed — they can contain sensitive output values and resource IDs.
+
+**Before every commit:**
+- Run `git diff --staged` and confirm no real token, key, or password appears in the diff.
+- If a secret is accidentally committed: rotate the credential immediately (Telegram BotFather, Anthropic Console, AWS IAM), then purge it from git history with `git filter-repo`. A follow-up commit that removes the value is not sufficient — the secret remains in history.
+
 ## Deploy Commands
 
 ```bash
