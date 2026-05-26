@@ -22,6 +22,21 @@ def balance_resumen(data: dict) -> str:
     )
 
 
+def gastos_periodo(data: dict, descripcion_periodo: str, por_categoria: bool = False) -> str:
+    if data["count"] == 0:
+        return f"📭 No registré gastos en *{descripcion_periodo}*."
+    msg = f"📊 *Gastos de {descripcion_periodo}*\n\n💸 Total: ${data['total']:,.2f}"
+    if por_categoria:
+        lines = "\n".join(
+            f"  • {cat.capitalize()}: ${v:,.2f}"
+            for cat, v in data["por_categoria"].items()
+            if v > 0
+        )
+        if lines:
+            msg += f"\n\n{lines}"
+    return msg
+
+
 def no_entendido(mensaje: str) -> str:
     return f"🤔 {mensaje}"
 

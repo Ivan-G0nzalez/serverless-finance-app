@@ -57,6 +57,14 @@ def lambda_handler(event, context):
             data = dynamo.get_balance(user_id)
             reply = responses.balance_resumen(data)
 
+        elif action == "gastos_periodo":
+            data = dynamo.get_period_summary(
+                user_id, parsed["fecha_inicio"], parsed["fecha_fin"]
+            )
+            reply = responses.gastos_periodo(
+                data, parsed["descripcion_periodo"], parsed.get("por_categoria", False)
+            )
+
         elif action == "desconocido":
             reply = responses.no_entendido(parsed.get("mensaje", "No entendí tu mensaje."))
 

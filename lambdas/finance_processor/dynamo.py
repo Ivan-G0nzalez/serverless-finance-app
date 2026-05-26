@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 
 import boto3
+from boto3.dynamodb.conditions import Key
 
 _table = boto3.resource("dynamodb").Table(os.environ["DYNAMODB_TABLE"])
 
@@ -84,6 +85,38 @@ def get_balance(user_id: int) -> dict:
         "gastos_total": gastos,
         "neto": ingresos - gastos,
         "por_categoria": balances,
+    }
+
+
+def get_period_summary(user_id: int, fecha_inicio: str, fecha_fin: str) -> dict:
+    pk = _user_pk(user_id)
+    items = []
+    kwargs = {
+        "KeyConditionExpression": Key("PK").eq(pk) & Key("SK").between(
+            f"TX#{fecha_inicio}",
+            f"TX#{fecha_fin}T23:59:59.999999",
+        )
+    }
+    while True:
+        resp = _table.query(**kwargs)
+        items.extend(resp.get("Items", []))
+        last = resp.get("LastEvaluatedKey")
+        if not last:
+            break
+        kwargs["ExclusiveStartKey"] = last
+
+    gastos = [i for i in items if i.get("tipo") == "gasto"]
+    total = sum(i["monto"] for i in gastos)
+    por_categoria = {cat: Decimal("0") for cat in CATEGORIES}
+    for i in gastos:
+        cat = i.get("categoria")
+        if cat in por_categoria:
+            por_categoria[cat] += i["monto"]
+
+    return {
+        "total": float(total),
+        "por_categoria": {k: float(v) for k, v in por_categoria.items()},
+        "count": len(gastos),
     }
 
 
