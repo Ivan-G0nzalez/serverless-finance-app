@@ -2,3 +2,6 @@
 skills-lock.json
 terraform/terraform.tfvars
 .env
+layers/python/
+builds/webhook_handler.zip
+builds/finance_processor.zip
