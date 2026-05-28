@@ -28,6 +28,12 @@ variable "anthropic_api_key" {
   sensitive   = true
 }
 
+variable "openai_api_key" {
+  description = "OpenAI API key for Whisper audio transcription"
+  type        = string
+  sensitive   = true
+}
+
 variable "lambda_runtime" {
   description = "Python runtime version for Lambda functions"
   type        = string

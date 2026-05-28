@@ -17,14 +17,15 @@ def send_message(chat_id: int, text: str) -> None:
     urllib.request.urlopen(req)
 
 
-def parse_update(body: dict) -> tuple[int, int, str] | None:
-    """Extrae (chat_id, user_id, texto) del update de Telegram. Retorna None si no es mensaje de texto."""
+def parse_update(body: dict) -> dict | None:
+    """Extrae datos del update de Telegram. Soporta mensajes de texto y de voz."""
     message = body.get("message") or body.get("edited_message")
     if not message:
         return None
-    text = message.get("text")
-    if not text:
-        return None
     chat_id = message["chat"]["id"]
     user_id = message["from"]["id"]
-    return chat_id, user_id, text
+    if text := message.get("text"):
+        return {"chat_id": chat_id, "user_id": user_id, "text": text}
+    if voice := message.get("voice"):
+        return {"chat_id": chat_id, "user_id": user_id, "voice_file_id": voice["file_id"]}
+    return None

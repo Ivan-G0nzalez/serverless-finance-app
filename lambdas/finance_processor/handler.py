@@ -3,6 +3,7 @@ import logging
 import os
 import urllib.request
 
+import audio
 import dynamo
 import parser as finance_parser
 import responses
@@ -27,7 +28,12 @@ def _send(chat_id: int, text: str) -> None:
 def lambda_handler(event, context):
     chat_id: int = event["chat_id"]
     user_id: int = event["user_id"]
-    text: str = event["text"]
+
+    if voice_file_id := event.get("voice_file_id"):
+        text = audio.transcribe_voice(voice_file_id)
+        logger.info("Transcribed voice from user %s: %s", user_id, text)
+    else:
+        text = event["text"]
 
     logger.info("Processing message from user %s: %s", user_id, text)
 

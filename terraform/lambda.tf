@@ -97,13 +97,14 @@ resource "aws_lambda_function" "finance_processor" {
   handler          = "handler.lambda_handler"
   filename         = data.archive_file.finance_processor.output_path
   source_code_hash = data.archive_file.finance_processor.output_base64sha256
-  timeout          = 30
+  timeout          = 60
   layers           = [aws_lambda_layer_version.deps.arn]
 
   environment {
     variables = {
       TELEGRAM_BOT_TOKEN = var.telegram_bot_token
       ANTHROPIC_API_KEY  = var.anthropic_api_key
+      OPENAI_API_KEY     = var.openai_api_key
       DYNAMODB_TABLE     = var.dynamodb_table_name
     }
   }
