@@ -5,3 +5,4 @@ terraform/terraform.tfvars
 layers/python/
 builds/webhook_handler.zip
 builds/finance_processor.zip
+builds/lambda_layer.zip
