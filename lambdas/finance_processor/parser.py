@@ -136,7 +136,11 @@ def parse_message(text: str) -> dict:
     response = _client.messages.create(
         model="claude-haiku-4-5-20251001",
         max_tokens=256,
-        system=_SYSTEM_PROMPT.format(today=date.today().isoformat()),
+        system=[{
+            "type": "text",
+            "text": _SYSTEM_PROMPT.format(today=date.today().isoformat()),
+            "cache_control": {"type": "ephemeral"},
+        }],
         tools=_TOOLS,
         tool_choice={"type": "any"},
         messages=[{"role": "user", "content": text}],
