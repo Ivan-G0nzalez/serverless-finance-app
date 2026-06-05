@@ -77,3 +77,17 @@ def error_correccion_invalida(razon: str) -> str:
 
 def error_generico() -> str:
     return "⚠️ Ocurrió un error. Intenta de nuevo en un momento."
+
+
+def ayuda() -> str:
+    return (
+        "📖 *Comandos disponibles:*\n\n"
+        "• /historial — últimas 10 transacciones\n"
+        "• /historial 20 — últimas N (máx 20)\n"
+        "• /balance — ingresos, gastos y neto\n"
+        "• /hoy — gastos de hoy por categoría\n"
+        "• /semana — gastos de esta semana\n"
+        "• /mes — gastos de este mes\n\n"
+        "_También puedes escribir en lenguaje natural:_\n"
+        "_'gasté 200 en comida', 'ingresé 5000', etc._"
+    )

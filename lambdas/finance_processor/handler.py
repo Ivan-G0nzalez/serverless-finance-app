@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import urllib.request
+from datetime import datetime, timedelta, timezone
 
 import audio
 import dynamo
@@ -25,6 +26,45 @@ def _send(chat_id: int, text: str) -> None:
     urllib.request.urlopen(req)
 
 
+def _handle_command(text: str, user_id: int) -> str | None:
+    stripped = text.strip()
+    if not stripped.startswith("/"):
+        return None
+    parts = stripped.lower().split()
+    cmd = parts[0]
+    args = parts[1:]
+
+    if cmd == "/historial":
+        limit = 10
+        if args:
+            try:
+                limit = max(1, min(20, int(args[0])))
+            except ValueError:
+                pass
+        return responses.lista_transacciones(dynamo.get_recent_transactions(user_id, limit=limit))
+
+    if cmd == "/balance":
+        return responses.balance_resumen(dynamo.get_balance(user_id))
+
+    if cmd in ("/hoy", "/semana", "/mes"):
+        hoy = datetime.now(timezone.utc).date()
+        if cmd == "/hoy":
+            inicio, fin, desc = str(hoy), str(hoy), "hoy"
+        elif cmd == "/semana":
+            inicio = str(hoy - timedelta(days=hoy.weekday()))
+            fin, desc = str(hoy), "esta semana"
+        else:
+            inicio = str(hoy.replace(day=1))
+            fin, desc = str(hoy), "este mes"
+        data = dynamo.get_period_summary(user_id, inicio, fin)
+        return responses.gastos_periodo(data, desc, por_categoria=True)
+
+    if cmd == "/ayuda":
+        return responses.ayuda()
+
+    return None
+
+
 def lambda_handler(event, context):
     chat_id: int = event["chat_id"]
     user_id: int = event["user_id"]
@@ -42,6 +82,10 @@ def lambda_handler(event, context):
             dynamo.ensure_profile(user_id)
         except Exception:
             pass  # Ya existe el perfil — ConditionalCheckFailedException
+
+        if reply := _handle_command(text, user_id):
+            _send(chat_id, reply)
+            return {"statusCode": 200}
 
         parsed = finance_parser.parse_message(text)
         action = parsed.get("action")
