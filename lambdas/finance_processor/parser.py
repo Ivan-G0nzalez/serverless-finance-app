@@ -11,7 +11,11 @@ La fecha de hoy es {today}. Las semanas van de lunes a domingo.
 Categorías de gasto:
 - gastos: necesidades del día a día (comida, transporte, servicios, salud)
 - lujos: entretenimiento, ropa de marca, restaurantes finos, viajes, tecnología no esencial
-- regalos: regalos para otras personas, donaciones"""
+- regalos: regalos para otras personas, donaciones
+
+Para corregir una transacción: si el usuario quiere corregir pero no menciona un número específico,
+usa listar_transacciones primero. Si menciona un número explícito (ej. 'la 2', 'el número 3'),
+usa corregir_transaccion directamente."""
 
 _TOOLS = [
     {
@@ -85,6 +89,36 @@ _TOOLS = [
             "required": ["mensaje"],
         },
     },
+    {
+        "name": "listar_transacciones",
+        "description": "Muestra las últimas transacciones del usuario (gastos e ingresos recientes). Úsalo cuando el usuario quiera ver su historial, sus movimientos recientes, o cuando quiera corregir una transacción pero no especifique cuál.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "corregir_transaccion",
+        "description": "Corrige el monto o la categoría de una transacción ya registrada. Úsalo solo cuando el usuario indique explícitamente un número de transacción (ej. 'la 2', 'el número 3', 'la primera').",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "numero": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10,
+                    "description": "Número de la transacción a corregir (1 = más reciente)",
+                },
+                "campo": {
+                    "type": "string",
+                    "enum": ["monto", "categoria"],
+                    "description": "Campo a corregir",
+                },
+                "nuevo_valor": {
+                    "type": "string",
+                    "description": "Nuevo valor. Para monto: número como string (ej. '350'). Para categoria: 'gastos', 'lujos' o 'regalos'.",
+                },
+            },
+            "required": ["numero", "campo", "nuevo_valor"],
+        },
+    },
 ]
 
 _ACTION_MAP = {
@@ -93,6 +127,8 @@ _ACTION_MAP = {
     "consultar_balance": "balance",
     "consultar_gastos_periodo": "gastos_periodo",
     "mensaje_desconocido": "desconocido",
+    "listar_transacciones": "listar_transacciones",
+    "corregir_transaccion": "corregir_transaccion",
 }
 
 

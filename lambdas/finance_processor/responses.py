@@ -41,5 +41,39 @@ def no_entendido(mensaje: str) -> str:
     return f"🤔 {mensaje}"
 
 
+def lista_transacciones(transactions: list[dict]) -> str:
+    if not transactions:
+        return "📭 No tienes transacciones registradas aún."
+    lines = ["📋 *Tus últimas transacciones:*\n"]
+    for i, tx in enumerate(transactions, start=1):
+        tipo_emoji = "💸" if tx["tipo"] == "gasto" else "💰"
+        cat_str = f" ({tx['categoria']})" if tx.get("categoria") else ""
+        fecha = tx.get("created_at", "")[:10]
+        lines.append(f"{i}. {tipo_emoji} ${tx['monto']:,.2f}{cat_str} — {tx['descripcion']} _{fecha}_")
+    lines.append("\n_Para corregir: 'corrige la #2, el monto era 350' o 'la 3 era categoría lujos'_")
+    return "\n".join(lines)
+
+
+def correccion_confirmada(campo: str, nuevo_valor: str, descripcion: str) -> str:
+    if campo == "monto":
+        try:
+            val = float(nuevo_valor)
+            return f"✅ *Corrección aplicada*\n💵 Nuevo monto: ${val:,.2f}\n📝 {descripcion}"
+        except ValueError:
+            pass
+    if campo == "categoria":
+        emoji = {"gastos": "🧾", "lujos": "✨", "regalos": "🎁"}.get(nuevo_valor, "📂")
+        return f"✅ *Corrección aplicada*\n{emoji} Nueva categoría: *{nuevo_valor}*\n📝 {descripcion}"
+    return "✅ Corrección aplicada."
+
+
+def error_transaccion_no_encontrada(numero: int) -> str:
+    return f"⚠️ No encontré la transacción #{numero}. Escribe 'ver mis transacciones' para ver la lista actual."
+
+
+def error_correccion_invalida(razon: str) -> str:
+    return f"⚠️ No se pudo corregir: {razon}"
+
+
 def error_generico() -> str:
     return "⚠️ Ocurrió un error. Intenta de nuevo en un momento."

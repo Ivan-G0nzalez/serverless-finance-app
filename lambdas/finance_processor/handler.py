@@ -74,6 +74,39 @@ def lambda_handler(event, context):
         elif action == "desconocido":
             reply = responses.no_entendido(parsed.get("mensaje", "No entendí tu mensaje."))
 
+        elif action == "listar_transacciones":
+            transactions = dynamo.get_recent_transactions(user_id, limit=10)
+            reply = responses.lista_transacciones(transactions)
+
+        elif action == "corregir_transaccion":
+            numero = int(parsed.get("numero", 0))
+            campo = parsed.get("campo", "")
+            nuevo_valor_raw = parsed.get("nuevo_valor", "")
+
+            if not (1 <= numero <= 10):
+                reply = responses.error_correccion_invalida(f"El número debe estar entre 1 y 10.")
+            else:
+                transactions = dynamo.get_recent_transactions(user_id, limit=10)
+                if numero > len(transactions):
+                    reply = responses.error_transaccion_no_encontrada(numero)
+                elif campo == "monto":
+                    try:
+                        nuevo_monto = float(nuevo_valor_raw)
+                        if nuevo_monto <= 0:
+                            raise ValueError("El monto debe ser positivo.")
+                        dynamo.update_transaction(user_id, transactions[numero - 1]["SK"], transactions[numero - 1], campo, nuevo_monto)
+                        reply = responses.correccion_confirmada(campo, nuevo_valor_raw, transactions[numero - 1]["descripcion"])
+                    except (ValueError, TypeError) as exc:
+                        reply = responses.error_correccion_invalida(str(exc))
+                elif campo == "categoria":
+                    try:
+                        dynamo.update_transaction(user_id, transactions[numero - 1]["SK"], transactions[numero - 1], campo, nuevo_valor_raw)
+                        reply = responses.correccion_confirmada(campo, nuevo_valor_raw, transactions[numero - 1]["descripcion"])
+                    except ValueError as exc:
+                        reply = responses.error_correccion_invalida(str(exc))
+                else:
+                    reply = responses.error_correccion_invalida(f"Campo desconocido: {campo}")
+
         else:
             reply = responses.no_entendido("No entendí tu mensaje. Puedes decirme algo como: *gasté 200 en comida* o *cuánto tengo de balance*.")
 

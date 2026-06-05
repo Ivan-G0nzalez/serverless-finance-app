@@ -120,5 +120,98 @@ def get_period_summary(user_id: int, fecha_inicio: str, fecha_fin: str) -> dict:
     }
 
 
+def get_recent_transactions(user_id: int, limit: int = 10) -> list[dict]:
+    pk = _user_pk(user_id)
+    resp = _table.query(
+        KeyConditionExpression=Key("PK").eq(pk) & Key("SK").begins_with("TX#"),
+        ScanIndexForward=False,
+        Limit=limit,
+    )
+    return [
+        {
+            "SK": item["SK"],
+            "tipo": item["tipo"],
+            "monto": float(item["monto"]),
+            "categoria": item.get("categoria"),
+            "descripcion": item.get("descripcion", ""),
+            "created_at": item.get("created_at", ""),
+        }
+        for item in resp.get("Items", [])
+    ]
+
+
+def update_transaction(
+    user_id: int,
+    sk: str,
+    old_item: dict,
+    campo: str,
+    nuevo_valor: float | str,
+) -> None:
+    pk = _user_pk(user_id)
+    tipo = old_item["tipo"]
+    old_monto = Decimal(str(old_item["monto"]))
+    old_categoria = old_item.get("categoria")
+
+    if campo == "monto":
+        new_monto = Decimal(str(nuevo_valor))
+        delta = new_monto - old_monto
+        _table.update_item(
+            Key={"PK": pk, "SK": sk},
+            UpdateExpression="SET monto = :m, updated_at = :t",
+            ConditionExpression="attribute_exists(PK)",
+            ExpressionAttributeValues={":m": new_monto, ":t": _now()},
+        )
+        if tipo == "gasto":
+            _table.update_item(
+                Key={"PK": pk, "SK": "BALANCE#total"},
+                UpdateExpression="ADD total_gastos :d SET updated_at = :t",
+                ExpressionAttributeValues={":d": delta, ":t": _now()},
+            )
+            if old_categoria in CATEGORIES:
+                _table.update_item(
+                    Key={"PK": pk, "SK": f"BALANCE#{old_categoria}"},
+                    UpdateExpression="ADD #total :d SET updated_at = :t",
+                    ExpressionAttributeNames={"#total": "total"},
+                    ExpressionAttributeValues={":d": delta, ":t": _now()},
+                )
+        elif tipo == "ingreso":
+            _table.update_item(
+                Key={"PK": pk, "SK": "BALANCE#total"},
+                UpdateExpression="ADD total_ingresos :d SET updated_at = :t",
+                ExpressionAttributeValues={":d": delta, ":t": _now()},
+            )
+
+    elif campo == "categoria":
+        if tipo != "gasto":
+            raise ValueError("Los ingresos no tienen categoría.")
+        new_categoria = str(nuevo_valor)
+        if new_categoria not in CATEGORIES:
+            raise ValueError(f"Categoría inválida: {new_categoria}. Opciones: {', '.join(CATEGORIES)}")
+        if old_categoria == new_categoria:
+            return
+        _table.update_item(
+            Key={"PK": pk, "SK": sk},
+            UpdateExpression="SET categoria = :c, updated_at = :t",
+            ConditionExpression="attribute_exists(PK)",
+            ExpressionAttributeValues={":c": new_categoria, ":t": _now()},
+        )
+        if old_categoria in CATEGORIES:
+            _table.update_item(
+                Key={"PK": pk, "SK": f"BALANCE#{old_categoria}"},
+                UpdateExpression="ADD #total :d SET updated_at = :t",
+                ExpressionAttributeNames={"#total": "total"},
+                ExpressionAttributeValues={":d": -old_monto, ":t": _now()},
+            )
+        _table.update_item(
+            Key={"PK": pk, "SK": f"BALANCE#{new_categoria}"},
+            UpdateExpression="ADD #total :d SET updated_at = :t",
+            ExpressionAttributeNames={"#total": "total"},
+            ExpressionAttributeValues={":d": old_monto, ":t": _now()},
+        )
+
+    else:
+        raise ValueError(f"Campo desconocido: {campo}")
+
+
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
