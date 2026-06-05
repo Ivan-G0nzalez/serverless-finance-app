@@ -103,7 +103,7 @@ _TOOLS = [
                 "numero": {
                     "type": "integer",
                     "minimum": 1,
-                    "maximum": 10,
+                    "maximum": 20,
                     "description": "Número de la transacción a corregir (1 = más reciente)",
                 },
                 "campo": {

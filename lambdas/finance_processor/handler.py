@@ -127,10 +127,10 @@ def lambda_handler(event, context):
             campo = parsed.get("campo", "")
             nuevo_valor_raw = parsed.get("nuevo_valor", "")
 
-            if not (1 <= numero <= 10):
-                reply = responses.error_correccion_invalida(f"El número debe estar entre 1 y 10.")
+            if not (1 <= numero <= 20):
+                reply = responses.error_correccion_invalida("El número debe estar entre 1 y 20.")
             else:
-                transactions = dynamo.get_recent_transactions(user_id, limit=10)
+                transactions = dynamo.get_recent_transactions(user_id, limit=20)
                 if numero > len(transactions):
                     reply = responses.error_transaccion_no_encontrada(numero)
                 elif campo == "monto":
