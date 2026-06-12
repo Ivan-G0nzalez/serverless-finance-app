@@ -38,7 +38,7 @@ jobs:
         run: |
           aws s3 cp builds/lambda_layer.zip s3://$BUCKET/lambda_layer.zip
           openssl dgst -sha256 -binary builds/lambda_layer.zip | base64 > builds/lambda_layer.sha256
-          aws s3 cp builds/lambda_layer.sha256 s3://$BUCKET/lambda_layer.sha256
+          aws s3 cp builds/lambda_layer.sha256 s3://$BUCKET/lambda_layer.sha256 --content-type "text/plain"
 
       - name: Trigger Terraform Cloud run
         env:
