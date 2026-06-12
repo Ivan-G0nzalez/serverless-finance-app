@@ -13,6 +13,13 @@ Categorías de gasto:
 - lujos: entretenimiento, ropa de marca, restaurantes finos, viajes, tecnología no esencial
 - regalos: regalos para otras personas, donaciones
 
+Medios de pago (infiere del mensaje, default bancolombia si no se menciona):
+- bancolombia: transferencia Bancolombia (default)
+- nequi: Nequi
+- visa_black: tarjeta de crédito Visa Black
+- visa_rappi: tarjeta Visa Rappi
+- efectivo: efectivo o cash
+
 Para corregir una transacción: si el usuario quiere corregir pero no menciona un número específico,
 usa listar_transacciones primero. Si menciona un número explícito (ej. 'la 2', 'el número 3'),
 usa corregir_transaccion directamente.
@@ -34,6 +41,11 @@ _TOOLS = [
                     "description": "Categoría del gasto",
                 },
                 "descripcion": {"type": "string", "description": "Descripción breve del gasto"},
+                "medio_de_pago": {
+                    "type": "string",
+                    "enum": ["bancolombia", "nequi", "visa_black", "visa_rappi", "efectivo"],
+                    "description": "Medio de pago usado. Default bancolombia si no se menciona.",
+                },
             },
             "required": ["monto", "categoria", "descripcion"],
         },
@@ -58,6 +70,11 @@ _TOOLS = [
                                 "description": "Categoría del gasto",
                             },
                             "descripcion": {"type": "string", "description": "Descripción breve del gasto"},
+                            "medio_de_pago": {
+                                "type": "string",
+                                "enum": ["bancolombia", "nequi", "visa_black", "visa_rappi", "efectivo"],
+                                "description": "Medio de pago usado. Default bancolombia si no se menciona.",
+                            },
                         },
                         "required": ["monto", "categoria", "descripcion"],
                     },

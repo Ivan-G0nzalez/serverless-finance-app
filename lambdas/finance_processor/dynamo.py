@@ -22,7 +22,7 @@ def ensure_profile(user_id: int) -> None:
     )
 
 
-def register_transaction(user_id: int, tipo: str, monto: float, categoria: str | None, descripcion: str) -> str:
+def register_transaction(user_id: int, tipo: str, monto: float, categoria: str | None, descripcion: str, medio_de_pago: str = "bancolombia") -> str:
     pk = _user_pk(user_id)
     ts = datetime.now(timezone.utc).isoformat()
     sk = f"TX#{ts}"
@@ -37,6 +37,8 @@ def register_transaction(user_id: int, tipo: str, monto: float, categoria: str |
     }
     if categoria:
         item["categoria"] = categoria
+    if tipo == "gasto":
+        item["medio_de_pago"] = medio_de_pago
 
     _table.put_item(Item=item)
     _update_balance(user_id, tipo, monto, categoria)
@@ -135,6 +137,7 @@ def get_recent_transactions(user_id: int, limit: int = 10) -> list[dict]:
             "categoria": item.get("categoria"),
             "descripcion": item.get("descripcion", ""),
             "created_at": item.get("created_at", ""),
+            "medio_de_pago": item.get("medio_de_pago"),
         }
         for item in resp.get("Items", [])
     ]

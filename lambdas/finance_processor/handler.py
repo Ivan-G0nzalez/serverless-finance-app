@@ -94,16 +94,18 @@ def lambda_handler(event, context):
             monto = float(parsed["monto"])
             categoria = parsed.get("categoria", "gastos")
             descripcion = parsed.get("descripcion", text)
-            dynamo.register_transaction(user_id, "gasto", monto, categoria, descripcion)
-            reply = responses.gasto_confirmado(monto, categoria, descripcion)
+            medio_de_pago = parsed.get("medio_de_pago", "bancolombia")
+            dynamo.register_transaction(user_id, "gasto", monto, categoria, descripcion, medio_de_pago)
+            reply = responses.gasto_confirmado(monto, categoria, descripcion, medio_de_pago)
 
         elif action == "multiples_gastos":
             for gasto in parsed.get("gastos", []):
                 monto = float(gasto["monto"])
                 categoria = gasto.get("categoria", "gastos")
                 descripcion = gasto.get("descripcion", "")
-                dynamo.register_transaction(user_id, "gasto", monto, categoria, descripcion)
-                _send(chat_id, responses.gasto_confirmado(monto, categoria, descripcion))
+                medio_de_pago = gasto.get("medio_de_pago", "bancolombia")
+                dynamo.register_transaction(user_id, "gasto", monto, categoria, descripcion, medio_de_pago)
+                _send(chat_id, responses.gasto_confirmado(monto, categoria, descripcion, medio_de_pago))
             if pregunta := parsed.get("pregunta_pendiente"):
                 _send(chat_id, responses.no_entendido(pregunta))
             reply = None

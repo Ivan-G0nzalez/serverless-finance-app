@@ -1,6 +1,16 @@
-def gasto_confirmado(monto: float, categoria: str, descripcion: str) -> str:
+MEDIO_LABELS = {
+    "bancolombia": "💳 Bancolombia",
+    "nequi": "🟣 Nequi",
+    "visa_black": "⬛ Visa Black",
+    "visa_rappi": "🟠 Visa Rappi",
+    "efectivo": "💵 Efectivo",
+}
+
+
+def gasto_confirmado(monto: float, categoria: str, descripcion: str, medio_de_pago: str = "bancolombia") -> str:
     emoji = {"gastos": "🧾", "lujos": "✨", "regalos": "🎁"}.get(categoria, "💸")
-    return f"{emoji} *Gasto registrado*\n💵 ${monto:,.2f} en *{categoria}*\n📝 {descripcion}"
+    medio_label = MEDIO_LABELS.get(medio_de_pago, medio_de_pago)
+    return f"{emoji} *Gasto registrado*\n💵 ${monto:,.2f} en *{categoria}*\n📝 {descripcion}\n{medio_label}"
 
 
 def ingreso_confirmado(monto: float, descripcion: str) -> str:
@@ -49,7 +59,9 @@ def lista_transacciones(transactions: list[dict]) -> str:
         tipo_emoji = "💸" if tx["tipo"] == "gasto" else "💰"
         cat_str = f" ({tx['categoria']})" if tx.get("categoria") else ""
         fecha = tx.get("created_at", "")[:10]
-        lines.append(f"{i}. {tipo_emoji} ${tx['monto']:,.2f}{cat_str} — {tx['descripcion']} _{fecha}_")
+        medio = tx.get("medio_de_pago")
+        medio_str = f" · {MEDIO_LABELS.get(medio, medio)}" if medio else ""
+        lines.append(f"{i}. {tipo_emoji} ${tx['monto']:,.2f}{cat_str} — {tx['descripcion']}{medio_str} _{fecha}_")
     lines.append("\n_Para corregir: 'corrige la #2, el monto era 350' o 'la 3 era categoría lujos'_")
     return "\n".join(lines)
 
