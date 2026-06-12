@@ -32,16 +32,13 @@ jobs:
           mkdir -p builds
           cd layers && zip -r ../builds/lambda_layer.zip python/ --quiet
 
-      - name: Upload layer to S3 and commit hash
+      - name: Upload layer and hash to S3
         env:
           BUCKET: app-finanzas-lambda-artifacts
         run: |
           aws s3 cp builds/lambda_layer.zip s3://$BUCKET/lambda_layer.zip
           openssl dgst -sha256 -binary builds/lambda_layer.zip | base64 > builds/lambda_layer.sha256
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add builds/lambda_layer.sha256
-          git diff --staged --quiet || (git commit -m "build: update layer hash [skip ci]" && git push)
+          aws s3 cp builds/lambda_layer.sha256 s3://$BUCKET/lambda_layer.sha256
 
       - name: Trigger Terraform Cloud run
         env:
