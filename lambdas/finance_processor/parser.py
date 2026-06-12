@@ -15,7 +15,10 @@ Categorías de gasto:
 
 Para corregir una transacción: si el usuario quiere corregir pero no menciona un número específico,
 usa listar_transacciones primero. Si menciona un número explícito (ej. 'la 2', 'el número 3'),
-usa corregir_transaccion directamente."""
+usa corregir_transaccion directamente.
+
+Cuando el usuario mencione 2 o más gastos distintos en un mismo mensaje, usa registrar_multiples_gastos.
+Si algún gasto tiene monto o contexto ambiguo, descríbelo en pregunta_pendiente en lugar de incluirlo en el array."""
 
 _TOOLS = [
     {
@@ -33,6 +36,38 @@ _TOOLS = [
                 "descripcion": {"type": "string", "description": "Descripción breve del gasto"},
             },
             "required": ["monto", "categoria", "descripcion"],
+        },
+    },
+    {
+        "name": "registrar_multiples_gastos",
+        "description": "Registrar varios gastos mencionados en un mismo mensaje. Úsalo cuando el usuario mencione 2 o más gastos distintos en un solo mensaje.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "gastos": {
+                    "type": "array",
+                    "description": "Lista de gastos identificados en el mensaje",
+                    "minItems": 2,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "monto": {"type": "number", "description": "Cantidad de dinero gastada"},
+                            "categoria": {
+                                "type": "string",
+                                "enum": ["gastos", "lujos", "regalos"],
+                                "description": "Categoría del gasto",
+                            },
+                            "descripcion": {"type": "string", "description": "Descripción breve del gasto"},
+                        },
+                        "required": ["monto", "categoria", "descripcion"],
+                    },
+                },
+                "pregunta_pendiente": {
+                    "type": "string",
+                    "description": "Si algún gasto tiene monto o contexto ambiguo, formula aquí la pregunta para el usuario sobre ese gasto. Omite si todos quedaron claros.",
+                },
+            },
+            "required": ["gastos"],
         },
     },
     {
@@ -123,6 +158,7 @@ _TOOLS = [
 
 _ACTION_MAP = {
     "registrar_gasto": "gasto",
+    "registrar_multiples_gastos": "multiples_gastos",
     "registrar_ingreso": "ingreso",
     "consultar_balance": "balance",
     "consultar_gastos_periodo": "gastos_periodo",
@@ -135,7 +171,7 @@ _ACTION_MAP = {
 def parse_message(text: str) -> dict:
     response = _client.messages.create(
         model="claude-haiku-4-5-20251001",
-        max_tokens=256,
+        max_tokens=512,
         system=[{
             "type": "text",
             "text": _SYSTEM_PROMPT.format(today=date.today().isoformat()),

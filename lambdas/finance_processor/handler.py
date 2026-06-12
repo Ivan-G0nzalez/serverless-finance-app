@@ -97,6 +97,17 @@ def lambda_handler(event, context):
             dynamo.register_transaction(user_id, "gasto", monto, categoria, descripcion)
             reply = responses.gasto_confirmado(monto, categoria, descripcion)
 
+        elif action == "multiples_gastos":
+            for gasto in parsed.get("gastos", []):
+                monto = float(gasto["monto"])
+                categoria = gasto.get("categoria", "gastos")
+                descripcion = gasto.get("descripcion", "")
+                dynamo.register_transaction(user_id, "gasto", monto, categoria, descripcion)
+                _send(chat_id, responses.gasto_confirmado(monto, categoria, descripcion))
+            if pregunta := parsed.get("pregunta_pendiente"):
+                _send(chat_id, responses.no_entendido(pregunta))
+            reply = None
+
         elif action == "ingreso":
             monto = float(parsed["monto"])
             descripcion = parsed.get("descripcion", text)
@@ -158,5 +169,6 @@ def lambda_handler(event, context):
         logger.exception("Error processing message: %s", e)
         reply = responses.error_generico()
 
-    _send(chat_id, reply)
+    if reply is not None:
+        _send(chat_id, reply)
     return {"statusCode": 200}
