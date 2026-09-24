@@ -17,3 +17,8 @@ output "finance_processor_arn" {
   description = "ARN de la Lambda finance_processor"
   value       = aws_lambda_function.finance_processor.arn
 }
+
+output "echo_endpoint_url" {
+  description = "URL del endpoint de prueba (POC) que recibe un body y lo retorna"
+  value       = "${aws_api_gateway_stage.main.invoke_url}/echo"
+}

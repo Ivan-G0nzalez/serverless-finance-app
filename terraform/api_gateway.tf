@@ -43,6 +43,9 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_resource.webhook,
       aws_api_gateway_method.post_webhook,
       aws_api_gateway_integration.lambda,
+      aws_api_gateway_resource.echo,
+      aws_api_gateway_method.post_echo,
+      aws_api_gateway_integration.echo_lambda,
     ]))
   }
 
@@ -50,7 +53,7 @@ resource "aws_api_gateway_deployment" "main" {
     create_before_destroy = true
   }
 
-  depends_on = [aws_api_gateway_integration.lambda]
+  depends_on = [aws_api_gateway_integration.lambda, aws_api_gateway_integration.echo_lambda]
 }
 
 resource "aws_api_gateway_stage" "main" {
